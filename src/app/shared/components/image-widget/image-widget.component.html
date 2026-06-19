@@ -1,0 +1,19 @@
+<div class="image-widget card">
+  <div class="widget-header" *ngIf="title || actionText">
+    <div class="widget-title" *ngIf="title">{{ title }}</div>
+    <a href="#" class="widget-action" *ngIf="actionText" (click)="onActionClick($event)">{{ actionText }}</a>
+  </div>
+  <div class="widget-body" [style.height]="height">
+    <img [src]="imageUrl" alt="Widget Image" class="widget-image" *ngIf="imageUrl">
+    <div class="live-badge" *ngIf="isLive">
+      <i class="bi bi-broadcast"></i>
+      <span>Live</span>
+    </div>
+    <div class="image-overlay">
+      <ng-content></ng-content>
+    </div>
+  </div>
+  <div class="widget-caption" *ngIf="caption">
+    {{ caption }}
+  </div>
+</div>

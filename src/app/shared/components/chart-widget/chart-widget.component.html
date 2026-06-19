@@ -1,0 +1,9 @@
+<div class="chart-widget card">
+  <div class="widget-header">
+    <div class="widget-title">{{ title }}</div>
+    <a href="#" class="widget-action" *ngIf="actionText" (click)="onActionClick($event)">{{ actionText }} <i class="bi bi-chevron-right"></i></a>
+  </div>
+  <div class="widget-body">
+    <div echarts [options]="options" class="chart-container"></div>
+  </div>
+</div>

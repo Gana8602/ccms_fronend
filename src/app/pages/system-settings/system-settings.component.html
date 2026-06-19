@@ -1,0 +1,135 @@
+<div class="h-full w-full flex flex-col bg-slate-100 dark:bg-[#050505]">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-4 py-3 shrink-0 border-b border-divider bg-white dark:bg-[#111111]">
+    <div>
+      <h1 class="text-lg font-display font-bold text-primary leading-tight">SYSTEM SETTINGS</h1>
+      <p class="text-[9px] text-muted tracking-widest uppercase">Configuration & Setup</p>
+    </div>
+  </div>
+
+  <div class="flex-grow overflow-y-auto custom-scrollbar p-4 flex flex-col gap-6">
+    <!-- Camera Management Section -->
+    <div class="bg-white dark:bg-[#111111] border border-divider rounded-xl shadow-sm p-5">
+      <h2 class="text-sm font-bold text-primary mb-4 flex items-center gap-2"><i class="pi pi-camera"></i> Manage Cameras</h2>
+      
+      @if (cameras().length > 0) {
+        <div class="mb-6 flex flex-col gap-2">
+          @for (cam of cameras(); track cam.id) {
+            <div class="flex items-center justify-between bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded px-3 py-2">
+              <div class="flex flex-col">
+                <span class="text-xs font-bold text-primary">{{ cam.name }}</span>
+                <span class="text-[10px] text-muted">{{ cam.feedUrl }}</span>
+              </div>
+              <button class="text-status-red hover:bg-red-500/10 p-2 rounded transition-colors" (click)="deleteCamera(cam.id)" title="Delete Camera">
+                <i class="pi pi-trash text-sm"></i>
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="flex gap-4 border-t border-divider pt-4">
+        <div class="flex-1 flex flex-col gap-1">
+          <label class="text-[10px] font-bold text-muted uppercase tracking-widest">Camera Name / Location</label>
+          <input type="text" [(ngModel)]="newCameraName" placeholder="e.g. Main Gate" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded px-3 py-2 text-xs text-primary outline-none focus:border-primary-blue transition-colors">
+        </div>
+        <div class="flex-1 flex flex-col gap-1">
+          <label class="text-[10px] font-bold text-muted uppercase tracking-widest">RTSP Stream URL</label>
+          <input type="text" [(ngModel)]="newCameraUrl" placeholder="rtsp://192.168.1.10:8554/stream" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded px-3 py-2 text-xs text-primary outline-none focus:border-primary-blue transition-colors">
+        </div>
+        <div class="flex items-end">
+          <button class="bg-primary-blue hover:bg-blue-600 text-white text-xs font-bold py-2 px-6 rounded transition-colors" (click)="addCamera()">Add Camera</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GCP Configuration Section -->
+    <div class="bg-white dark:bg-[#111111] border border-divider rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+      <div class="px-5 py-4 border-b border-divider bg-slate-50 dark:bg-[#151515] flex items-center justify-between">
+        <h2 class="text-sm font-bold text-primary flex items-center gap-2"><i class="pi pi-map"></i> Ground Control Points (GCP) Configuration</h2>
+        <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-muted tracking-widest">
+          Select Camera:
+          <select class="bg-white dark:bg-[#222] border border-divider rounded px-2 py-1 outline-none focus:border-primary-blue" (change)="selectGcpCamera(cameras()[$any($event.target).value])">
+            <option value="" disabled selected>-- Choose --</option>
+            @for (cam of cameras(); track cam.id; let i = $index) {
+              <option [value]="i">{{ cam.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (activeGcpCamera()) {
+      <div class="flex-grow min-h-0 flex overflow-hidden">
+        <!-- Left: Clickable Feed Preview -->
+        <div class="flex-[1.2] bg-[#0a0a0a] border-r border-divider p-4 flex flex-col items-center justify-center relative">
+          <span class="absolute top-2 left-2 bg-black/60 text-white/80 text-[8px] uppercase tracking-widest font-bold px-2 py-1 rounded">Interactive Click-Assist</span>
+          
+          <div class="w-full aspect-video bg-black rounded-lg overflow-hidden border border-white/10 relative">
+            <img [src]="activeGcpCamera()?.feedUrl" class="w-full h-full object-contain pointer-events-none">
+            
+            <canvas #gcpCanvas class="absolute inset-0 w-full h-full z-10 cursor-crosshair" (click)="onGcpClick($event)"></canvas>
+          </div>
+          <span class="text-[9px] text-muted mt-3 text-center w-full block">Select a point group, then click on the feed image to auto-capture Pixel Coordinates.</span>
+        </div>
+
+        <!-- Right: Form Fields -->
+        <div class="flex-1 p-5 overflow-y-auto custom-scrollbar flex flex-col gap-4">
+          <div class="flex items-center gap-2 text-[10px] font-bold text-primary-blue uppercase tracking-widest border border-primary-blue/20 bg-primary-blue/5 p-2 rounded-lg">
+            <span>Active Selection:</span>
+            <select class="bg-transparent border-none outline-none font-bold text-primary cursor-pointer" [value]="activeGcpPoint()" (change)="activeGcpPoint.set($any($event.target).value)">
+              <option value="top_left">GCP 1 (Top Left)</option>
+              <option value="top_right">GCP 2 (Top Right)</option>
+              <option value="bottom_right">GCP 3 (Bottom Right)</option>
+              <option value="bottom_left">GCP 4 (Bottom Left)</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <div class="border border-divider rounded-xl p-3 flex flex-col gap-2 relative transition-colors" [class.border-status-red]="activeGcpPoint() === 'top_left'">
+              <div class="text-[9px] font-bold text-status-red uppercase tracking-widest">GCP 1: Top Left</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="flex flex-col"><label class="text-[8px] text-muted font-bold uppercase mb-0.5">Pixel X</label><input type="number" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded p-1 text-[10px] text-primary outline-none" [value]="gcpPoints()['top_left']?.x || 0" disabled></div>
+                <div class="flex flex-col"><label class="text-[8px] text-muted font-bold uppercase mb-0.5">Pixel Y</label><input type="number" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded p-1 text-[10px] text-primary outline-none" [value]="gcpPoints()['top_left']?.y || 0" disabled></div>
+              </div>
+            </div>
+            
+            <div class="border border-divider rounded-xl p-3 flex flex-col gap-2 relative transition-colors" [class.border-primary-blue]="activeGcpPoint() === 'top_right'">
+              <div class="text-[9px] font-bold text-primary-blue uppercase tracking-widest">GCP 2: Top Right</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="flex flex-col"><label class="text-[8px] text-muted font-bold uppercase mb-0.5">Pixel X</label><input type="number" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded p-1 text-[10px] text-primary outline-none" [value]="gcpPoints()['top_right']?.x || 0" disabled></div>
+                <div class="flex flex-col"><label class="text-[8px] text-muted font-bold uppercase mb-0.5">Pixel Y</label><input type="number" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded p-1 text-[10px] text-primary outline-none" [value]="gcpPoints()['top_right']?.y || 0" disabled></div>
+              </div>
+            </div>
+            
+            <div class="border border-divider rounded-xl p-3 flex flex-col gap-2 relative transition-colors" [class.border-primary-blue]="activeGcpPoint() === 'bottom_right'">
+              <div class="text-[9px] font-bold text-primary-blue uppercase tracking-widest">GCP 3: Bottom Right</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="flex flex-col"><label class="text-[8px] text-muted font-bold uppercase mb-0.5">Pixel X</label><input type="number" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded p-1 text-[10px] text-primary outline-none" [value]="gcpPoints()['bottom_right']?.x || 0" disabled></div>
+                <div class="flex flex-col"><label class="text-[8px] text-muted font-bold uppercase mb-0.5">Pixel Y</label><input type="number" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded p-1 text-[10px] text-primary outline-none" [value]="gcpPoints()['bottom_right']?.y || 0" disabled></div>
+              </div>
+            </div>
+
+            <div class="border border-divider rounded-xl p-3 flex flex-col gap-2 relative transition-colors" [class.border-primary-blue]="activeGcpPoint() === 'bottom_left'">
+              <div class="text-[9px] font-bold text-primary-blue uppercase tracking-widest">GCP 4: Bottom Left</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="flex flex-col"><label class="text-[8px] text-muted font-bold uppercase mb-0.5">Pixel X</label><input type="number" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded p-1 text-[10px] text-primary outline-none" [value]="gcpPoints()['bottom_left']?.x || 0" disabled></div>
+                <div class="flex flex-col"><label class="text-[8px] text-muted font-bold uppercase mb-0.5">Pixel Y</label><input type="number" class="bg-slate-50 dark:bg-[#1a1a1a] border border-divider rounded p-1 text-[10px] text-primary outline-none" [value]="gcpPoints()['bottom_left']?.y || 0" disabled></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-auto pt-4 border-t border-divider flex gap-2">
+            <button class="flex-1 bg-transparent border border-divider hover:bg-[#222] text-brand-text text-xs font-bold py-2 px-4 rounded transition-colors" (click)="clearGcp()">Clear Points</button>
+            <button class="flex-1 bg-primary-blue hover:bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded transition-colors" (click)="saveGcp()">Save Config</button>
+          </div>
+        </div>
+      </div>
+      } @else {
+        <div class="flex-grow flex flex-col items-center justify-center text-muted gap-3">
+          <i class="pi pi-camera text-4xl opacity-50"></i>
+          <p class="text-xs">Select a camera from the dropdown to configure Ground Control Points.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

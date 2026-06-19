@@ -1,0 +1,15 @@
+<div class="stat-card">
+  <div class="stat-header">
+    <i *ngIf="icon" [class]="icon" style="margin-right: 0.5rem; color: var(--danger)"></i>
+    {{ title }}
+  </div>
+  <div class="stat-body">
+    <div class="stat-value" [ngClass]="valueClass">
+      <i *ngIf="subIcon" [class]="subIcon" style="margin-right: 0.5rem; font-size: 2rem;"></i>
+      {{ value }}
+    </div>
+  </div>
+  <div class="stat-footer" [ngClass]="subtextClass" *ngIf="subtext">
+    <span [innerHTML]="subtext"></span>
+  </div>
+</div>

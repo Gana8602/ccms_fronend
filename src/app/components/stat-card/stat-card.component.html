@@ -1,0 +1,39 @@
+@if (type() === 'default' && data()) {
+  <div class="h-full panel flex flex-col justify-center p-2 relative bg-brand-panel text-brand-text">
+    
+    <div class="text-[9px] 2xl:text-[10px] font-bold uppercase mb-0.5 flex items-center justify-between text-primary tracking-wide">
+      <span class="flex items-center">
+        @if (data()!.color === 'red') { <i class="pi pi-heart text-status-red mr-1.5 text-xs"></i> }
+        {{ data()!.title }}
+      </span>
+    </div>
+    
+    <div class="flex items-center justify-center mt-1 mb-1">
+      <div class="text-2xl 2xl:text-3xl font-bold"
+           [ngClass]="{
+             'text-primary-dark dark:text-primary-blue': data()!.color === 'blue',
+             'text-status-green': data()!.color === 'green',
+             'text-primary dark:text-white': data()!.color === 'red'
+           }">
+        {{ data()!.value }}
+      </div>
+    </div>
+    
+    <div class="flex justify-center w-full mt-auto">
+      <div class="text-[9px] 2xl:text-[10px] font-bold text-center"
+           [ngClass]="{
+             'text-status-green': (data()!.trendType === 'up' && data()!.color !== 'red') || data()!.trendType === 'neutral',
+             'text-status-red': data()!.trendType === 'down' || data()!.color === 'red'
+           }">
+        @if (data()!.trendType === 'up' && data()!.color !== 'red') {
+          <i class="pi pi-arrow-up text-[8px]"></i>
+        } @else if (data()!.trendType === 'down' && data()!.color !== 'red') {
+          <i class="pi pi-arrow-down text-[8px]"></i>
+        } @else if (data()!.trendType === 'neutral') {
+          <span class="w-1.5 h-1.5 rounded-full inline-block bg-status-green mr-1"></span>
+        }
+        {{ data()!.trend }}
+      </div>
+    </div>
+  </div>
+}

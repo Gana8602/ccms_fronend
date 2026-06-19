@@ -1,0 +1,389 @@
+<div class="h-full w-full flex flex-col bg-slate-100 dark:bg-[#050505] relative">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-4 py-3 shrink-0 border-b border-divider bg-white dark:bg-[#111111]">
+    <div>
+      <h1 class="text-lg font-display font-bold text-primary leading-tight">LIVE MONITORING</h1>
+      <p class="text-[9px] text-muted tracking-widest uppercase">Intelligent Grid Array</p>
+    </div>
+  </div>
+
+  <!-- Grid View -->
+  <div class="flex-grow min-h-0 overflow-y-auto custom-scrollbar p-3">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+      @for (cam of cameras(); track cam.id) {
+      <div
+        class="bg-white dark:bg-[#111111] rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-[#222222] relative group cursor-pointer hover:border-primary-blue transition-colors duration-200 flex flex-col h-[180px]"
+        (click)="openCameraDetail(cam)">
+
+        <!-- Image Feed -->
+        <div class="flex-grow w-full relative bg-black flex items-center justify-center">
+          @if (cam.isWorking) {
+          <!-- Using the rtsp backend feed URL provided by Django -->
+          <img [src]="cam.feedUrl"
+            class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+          } @else {
+          <div class="flex flex-col items-center justify-center text-status-red gap-2">
+            <i class="pi pi-video-slash text-2xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-wider">Feed Offline</span>
+          </div>
+          }
+        </div>
+
+        <!-- Top Overlays -->
+        <div class="absolute top-2 right-2 flex items-center gap-1 z-10">
+          @if (cam.isWorking) {
+          <div
+            class="bg-black/60 backdrop-blur text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-white/10 flex items-center gap-1.5 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-status-green"></span> {{ cam.count }}
+          </div>
+          }
+        </div>
+
+        <!-- Bottom Banner -->
+        <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent pt-6">
+          <div class="text-[9px] font-bold text-white flex items-center justify-between">
+            {{ cam.name }}
+            @if (cam.isWorking) { <span
+              class="text-[7px] text-status-green bg-status-green/20 px-1 py-0.5 rounded uppercase tracking-wider">Live</span>
+            }
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- DETAILED CAMERA VIEW POPUP (10% PADDING) -->
+  <!-- ========================================== -->
+  @if (selectedCamera()) {
+  <div
+    class="fixed inset-[3%] xl:inset-[6%] z-50 bg-slate-100 dark:bg-[#0a0a0a] border border-slate-300 dark:border-[#333333] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in ring-1 ring-black/5">
+
+    <!-- Header -->
+    <div
+      class="h-[40px] shrink-0 bg-white dark:bg-[#111111] border-b border-divider flex items-center justify-between px-4">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-video text-primary-blue"></i>
+        <span class="text-sm font-bold text-primary">{{ selectedCamera()?.name }}</span>
+        <span
+          class="text-[8px] bg-status-green/20 text-status-green px-1.5 py-0.5 rounded font-bold uppercase tracking-widest ml-2">Active
+          Stream</span>
+      </div>
+      <button
+        class="w-6 h-6 rounded-full bg-slate-100 dark:bg-[#222] text-primary flex items-center justify-center hover:bg-status-red hover:text-white transition-colors"
+        (click)="closeCameraDetail()">
+        <i class="pi pi-times text-[10px]"></i>
+      </button>
+    </div>
+
+    <!-- Main Modal Content Grid -->
+    <div class="flex-grow min-h-0 flex gap-3 p-3">
+
+      <!-- Left Column (Zones & Metrics) -->
+      <div class="w-[200px] shrink-0 flex flex-col gap-3 h-full">
+        <div
+          class="bg-white dark:bg-[#111111] border border-divider rounded-xl flex-grow flex flex-col overflow-hidden shadow-sm">
+          <div
+            class="px-3 py-2 border-b border-divider text-[9px] font-bold text-primary uppercase tracking-widest flex items-center justify-between">
+            <div class="flex items-center gap-1.5"><i class="pi pi-map-marker text-primary-blue text-[10px]"></i> Active
+              Zones</div>
+          </div>
+          <div class="flex-grow overflow-y-auto custom-scrollbar p-2 flex flex-col gap-2">
+            @for (z of customZones(); track z.name; let i = $index) {
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="flex items-center gap-1.5 text-primary font-bold">
+                <i class="pi pi-times text-red-500 cursor-pointer hover:scale-110" (click)="deleteZone(i)"
+                  title="Delete Zone"></i>
+                <span class="w-3 h-3 rounded-full" [style.backgroundColor]="z.color_hex"></span> {{ z.name }}
+              </span>
+              <span class="font-bold text-primary">{{ getZoneCount(z.name) }}</span>
+            </div>
+            }
+          </div>
+
+          <!-- Color picker when zones enabled -->
+          @if (zonesEnabled()) {
+          <div class="p-2 border-t border-divider bg-slate-50 dark:bg-[#151515] flex flex-col gap-2">
+            <span class="text-[8px] font-bold uppercase text-muted tracking-widest text-center">Select Color &
+              Draw</span>
+            <div class="flex justify-between px-2">
+              <button class="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 bg-[#ef4444]"
+                [class.border-black]="selectedZoneColor() === '#ef4444'"
+                [class.border-transparent]="selectedZoneColor() !== '#ef4444'"
+                (click)="selectedZoneColor.set('#ef4444')"></button>
+              <button class="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 bg-[#22c55e]"
+                [class.border-black]="selectedZoneColor() === '#22c55e'"
+                [class.border-transparent]="selectedZoneColor() !== '#22c55e'"
+                (click)="selectedZoneColor.set('#22c55e')"></button>
+              <button class="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 bg-[#3b82f6]"
+                [class.border-black]="selectedZoneColor() === '#3b82f6'"
+                [class.border-transparent]="selectedZoneColor() !== '#3b82f6'"
+                (click)="selectedZoneColor.set('#3b82f6')"></button>
+              <button class="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 bg-[#eab308]"
+                [class.border-black]="selectedZoneColor() === '#eab308'"
+                [class.border-transparent]="selectedZoneColor() !== '#eab308'"
+                (click)="selectedZoneColor.set('#eab308')"></button>
+              <button class="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 bg-[#a855f7]"
+                [class.border-black]="selectedZoneColor() === '#a855f7'"
+                [class.border-transparent]="selectedZoneColor() !== '#a855f7'"
+                (click)="selectedZoneColor.set('#a855f7')"></button>
+            </div>
+          </div>
+          }
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#111111] border border-divider rounded-xl shrink-0 p-3 flex flex-col gap-3 shadow-sm">
+          <div>
+            <div class="text-[8px] text-muted uppercase font-bold tracking-widest mb-0.5">Inside Fencing</div>
+            <div class="text-xl font-display font-bold text-primary">{{ globalStats()?.inside || 0 }}</div>
+          </div>
+          <div class="border-t border-divider pt-2">
+            <div class="text-[8px] text-muted uppercase font-bold tracking-widest mb-0.5">Outside Fencing</div>
+            <div class="text-xl font-display font-bold text-primary">{{ globalStats()?.outside || 0 }}</div>
+          </div>
+          <div class="border-t border-divider pt-2">
+            <div class="text-[8px] text-muted uppercase font-bold tracking-widest mb-0.5">Available Capacity</div>
+            <div class="text-xl font-display font-bold text-status-green">{{ globalStats()?.available || 200 }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Column (Top Metrics + Large Video) -->
+      <div class="flex-grow flex flex-col gap-3 min-w-0 h-full">
+        <!-- Top Metrics Row -->
+        <div class="grid grid-cols-4 gap-3 shrink-0 h-[60px]">
+          <div
+            class="bg-white dark:bg-[#111111] border border-divider rounded-xl shadow-sm px-3 py-2 flex items-center justify-between">
+            <div class="flex flex-col"><span
+                class="text-[8px] text-muted font-bold uppercase tracking-widest">Forward</span><span
+                class="text-xl font-display font-bold text-primary">{{ globalStats()?.forward || 0 }}</span></div>
+            <i class="pi pi-arrow-up text-status-green bg-status-green/10 p-2 rounded-full"></i>
+          </div>
+          <div
+            class="bg-white dark:bg-[#111111] border border-divider rounded-xl shadow-sm px-3 py-2 flex items-center justify-between">
+            <div class="flex flex-col"><span
+                class="text-[8px] text-muted font-bold uppercase tracking-widest">Backward</span><span
+                class="text-xl font-display font-bold text-primary">{{ globalStats()?.backward || 0 }}</span></div>
+            <i class="pi pi-arrow-down text-status-red bg-status-red/10 p-2 rounded-full"></i>
+          </div>
+          <div
+            class="bg-white dark:bg-[#111111] border border-divider rounded-xl shadow-sm px-3 py-2 flex items-center justify-between">
+            <div class="flex flex-col"><span class="text-[8px] text-muted font-bold uppercase tracking-widest">Total
+                Count</span><span class="text-xl font-display font-bold text-primary-blue">{{ globalStats()?.total || 0
+                }}</span></div>
+            <i class="pi pi-users text-primary-blue bg-primary-blue/10 p-2 rounded-full"></i>
+          </div>
+          <div
+            class="bg-status-red/10 border border-status-red/30 rounded-xl shadow-sm px-3 py-2 flex items-center justify-between">
+            <div class="flex flex-col"><span class="text-[8px] text-status-red font-bold uppercase tracking-widest">Risk
+                Alert</span><span class="text-sm font-bold text-status-red">{{ globalStats()?.density_level || 'LOW'
+                }}</span></div>
+            <i class="pi pi-exclamation-triangle text-status-red text-xl animate-pulse"></i>
+          </div>
+        </div>
+
+        <!-- Massive Camera Feed container & Scanner Container Wrapper -->
+        <div class="flex-grow flex gap-3 min-h-0 relative">
+          <!-- Camera Feed Container -->
+          <div
+            class="flex-grow relative bg-black rounded-xl overflow-hidden shadow-inner border border-divider transition-all duration-500 ease-in-out">
+
+            <!-- Live Feed or Frozen Frame -->
+            @if (frozenFrameData) {
+            <img [src]="frozenFrameData"
+              class="w-full h-full object-contain pointer-events-none filter sepia-[0.3] hue-rotate-[180deg] brightness-[1.2]">
+            <!-- Overlay to make it look like a scan mode -->
+            <div
+              class="absolute inset-0 bg-primary-blue/10 pointer-events-none border-[3px] border-primary-blue/30 animate-pulse">
+            </div>
+            } @else {
+            <img [src]="selectedCamera()?.feedUrl + (activeViewMode() === 'ai' ? '?ai=true' : '')"
+              class="w-full h-full object-contain pointer-events-none">
+            }
+
+            <!-- HUD UI Canvas (Overlays image) -->
+            <canvas #zoneCanvas class="absolute inset-0 w-full h-full z-10"
+              [class.cursor-crosshair]="zonesEnabled() || personInspectEnabled()"
+              [class.pointer-events-none]="!zonesEnabled() && !personInspectEnabled()"
+              (mousedown)="onZoneMouseDown($event)" (mousemove)="onZoneMouseMove($event)"
+              (mouseup)="onZoneMouseUp($event)">
+            </canvas>
+
+            <!-- CSS Premium AI HUD View -->
+            @if (activeViewMode() === 'ai') {
+            <!-- AI View Overlays rendered by backend, so we don't need a static dummy HUD here anymore -->
+            }
+
+            <!-- Animated Toolbar Controller -->
+            <div class="absolute top-3 right-3 flex items-start gap-2 z-20 overflow-hidden">
+              <!-- The Toolbar sliding out -->
+              <div class="flex gap-1.5 transition-transform duration-300" [class.translate-x-[120%]]="!showToolbar()">
+                <button
+                  class="bg-black/70 backdrop-blur border border-white/20 text-white px-2 py-1.5 rounded-lg text-[9px] font-bold hover:bg-primary-blue transition-colors"
+                  [class.bg-primary-blue]="activeViewMode() === 'clear'" (click)="toggleViewMode('clear')">Clear
+                  View</button>
+                <button
+                  class="bg-black/70 backdrop-blur border border-white/20 text-white px-2 py-1.5 rounded-lg text-[9px] font-bold hover:bg-primary-blue transition-colors"
+                  [class.bg-primary-blue]="activeViewMode() === 'ai'" (click)="toggleViewMode('ai')">AI
+                  View</button>
+                <button
+                  class="bg-black/70 backdrop-blur border border-white/20 text-white px-2 py-1.5 rounded-lg text-[9px] font-bold flex items-center gap-1 hover:bg-primary-blue transition-colors"
+                  [class.bg-primary-blue]="zonesEnabled()" (click)="zonesEnabled.set(!zonesEnabled())">
+                  <span class="w-1.5 h-1.5 rounded-full bg-status-yellow"></span> Zones</button>
+                <!-- <button
+                  class="bg-black/70 backdrop-blur border border-white/20 text-white px-2 py-1.5 rounded-lg text-[9px] font-bold flex items-center gap-1 hover:bg-primary-blue transition-colors"
+                  [class.bg-personInspectEnabled]="personInspectEnabled()" (click)="togglePersonInspect()">
+                  <i class="pi pi-user-edit text-[9px]"></i> Person Inspect</button> -->
+              </div>
+
+              <!-- Toggle Button -->
+              <button
+                class="bg-primary-blue text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg border border-white/20 z-30 shrink-0 hover:scale-110 transition-transform"
+                (click)="toggleToolbar()">
+                <i class="pi transition-transform duration-300" [class.pi-angle-double-left]="!showToolbar()"
+                  [class.pi-angle-double-right]="showToolbar()"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Animated Person Inspect Scanner Panel -->
+          @if (inspectedPerson()) {
+          <div
+            class="w-[240px] shrink-0 bg-[#0f172a] border border-primary-blue/30 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.15)] flex flex-col overflow-hidden animate-slide-left relative">
+            <!-- Animated Scanning Laser Background -->
+            <div class="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+              <div
+                class="w-full h-[2px] bg-primary-blue shadow-[0_0_15px_#3b82f6] animate-[scan_2s_ease-in-out_infinite_alternate]">
+              </div>
+            </div>
+
+            <!-- Header -->
+            <div
+              class="px-3 py-2 border-b border-primary-blue/20 bg-primary-blue/10 flex justify-between items-center z-10">
+              <span class="text-[11px] uppercase tracking-widest font-bold flex items-center gap-2">
+                <i class="pi pi-bolt"></i> Inspect Person
+              </span>
+              <button class="text-primary-blue/60 hover:text-white transition-colors" (click)="closePersonInspect()"><i
+                  class="pi pi-times text-[10px]"></i></button>
+            </div>
+
+            <div class="p-3 flex flex-col gap-4 flex-grow overflow-y-auto custom-scrollbar z-10">
+
+              <!-- Split View: Source (Crop) and Match (Shuffle/Result) -->
+              <div class="flex items-center gap-4 justify-center animate-fade-in relative group">
+                <!-- Source Image -->
+                <div
+                  class="w-16 h-16 rounded border border-primary-blue/50 overflow-hidden relative shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                  <img [src]="inspectedPerson()?.sourceImg" class="w-full h-full object-cover">
+                </div>
+
+                <i class="pi pi-angle-double-right text-primary-blue/50 text-lg"
+                  [class.animate-pulse]="inspectedPerson()?.isScanning"></i>
+
+                <!-- Match Image with Scan Effect -->
+                <div class="flex flex-col items-center gap-2">
+                  <div
+                    class="w-24 h-24 rounded-full border-2 border-primary-blue overflow-hidden relative shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                    @if (inspectedPerson()?.matchImg && inspectedPerson()?.matchImg !==
+                    'assets/images/unknown_avatar.png') {
+                    <img [src]="inspectedPerson()?.matchImg" class="w-full h-full object-cover">
+                    } @else {
+                    <div class="w-full h-full bg-secondary flex items-center justify-center">
+                      <i class="pi pi-user text-white/50 text-3xl"></i>
+                    </div>
+                    }
+                    @if (inspectedPerson()?.isScanning) {
+                    <!-- Inner scanning line and overlay -->
+                    <div
+                      class="absolute inset-0 bg-primary-blue/20 backdrop-blur-[1px] flex items-center justify-center">
+                    </div>
+                    <div
+                      class="absolute top-0 left-0 w-full h-[2px] bg-white opacity-70 animate-[scan_0.5s_linear_infinite]">
+                    </div>
+                    }
+                  </div>
+                  <div
+                    class="bg-primary-blue text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg tracking-wider">
+                    {{ inspectedPerson()?.id }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Entry Time Reveal -->
+              @if (inspectedPerson()?.showTime) {
+              <div
+                class="bg-primary-blue/5 border border-primary-blue/20 rounded-lg p-2 animate-fade-in transition-all">
+                <span class="text-[8px] uppercase tracking-widest text-primary-blue/70 font-bold block mb-1">Time
+                  Entered Sector</span>
+                <span class="text-sm font-display font-bold text-white flex items-center gap-2"><i
+                    class="pi pi-clock text-primary-blue"></i> {{ inspectedPerson()?.time }}</span>
+              </div>
+              }
+
+              <!-- Mini Map Trajectory Reveal -->
+              @if (inspectedPerson()?.showMap) {
+              <div class="flex-grow flex flex-col min-h-[140px] animate-fade-in transition-all">
+                <span class="text-[8px] uppercase tracking-widest text-primary-blue/70 font-bold block mb-1">Travel
+                  Trajectory</span>
+                <div id="mapbox-container"
+                  class="flex-grow rounded-lg overflow-hidden border border-primary-blue/30 relative bg-[#050505] p-2 flex items-center justify-center min-h-[140px]">
+                  <!-- Mapbox will mount here -->
+                  <div
+                    class="absolute top-1 left-1 text-[6px] text-primary-blue/50 font-mono uppercase z-10 bg-black/50 px-1 rounded">
+                    GPS Lock ACTIVE
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+
+        <!-- Bottom Masked Gallery Row -->
+        <div
+          class="h-[90px] shrink-0 bg-white dark:bg-[#111111] border border-divider rounded-xl shadow-sm flex flex-col overflow-hidden">
+          <div class="px-3 py-1 border-b border-divider text-[9px] font-bold text-primary uppercase tracking-widest">
+            Masked & Unknown Observations</div>
+          <div class="flex-grow flex items-center gap-2 overflow-x-auto custom-scrollbar p-2">
+            @for (face of maskedFaces(); track face.image_url) {
+            <div class="w-12 h-12 rounded border border-divider overflow-hidden relative shrink-0">
+              <img [src]="face.image_url" class="w-full h-full object-cover">
+              <div
+                class="absolute bottom-0 left-0 right-0 bg-black/70 text-[6px] text-center text-status-red font-bold uppercase">
+                {{ face.label || 'MASKED' }}</div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column (Known Faces) -->
+      <div
+        class="w-[180px] shrink-0 bg-white dark:bg-[#111111] border border-divider rounded-xl shadow-sm flex flex-col overflow-hidden">
+        <div
+          class="px-3 py-2 border-b border-divider text-[9px] font-bold text-primary uppercase tracking-widest flex items-center justify-between">
+          Known Faces <span class="bg-primary-blue/10 text-primary-blue px-1.5 py-0.5 rounded-full">{{
+            knownFaces().length }}</span>
+        </div>
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-2 flex flex-col gap-2">
+          @for (face of knownFaces(); track face.person_id) {
+          <div
+            class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-100 dark:border-[#222] bg-slate-50 dark:bg-[#151515]">
+            <img [src]="face.image_url"
+              class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-[#333]">
+            <div class="flex flex-col min-w-0">
+              <span class="text-[9px] font-bold text-primary truncate w-full">{{ face.person_id }}</span>
+              <span class="text-[7px] text-muted">{{ face.timestamp || 'Just now' }}</span>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+</div>

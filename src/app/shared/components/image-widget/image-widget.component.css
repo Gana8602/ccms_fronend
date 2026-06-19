@@ -1,0 +1,99 @@
+.image-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1rem 0.5rem 1rem;
+  
+  .widget-title {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    text-transform: uppercase;
+  }
+  
+  .widget-action {
+    font-size: 0.75rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.widget-body {
+  position: relative;
+  width: 100%;
+  padding: 0 1rem 1rem 1rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  
+  .widget-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    background-color: #2a3441; /* Placeholder fallback color */
+  }
+  
+  .live-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 1.5rem;
+    background-color: #2563eb; /* Royal blue background from mockup */
+    color: #ffffff;
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    z-index: 10;
+    pointer-events: none;
+    
+    i {
+      font-size: 0.75rem;
+      animation: beacon 1.5s infinite ease-in-out;
+    }
+  }
+  
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    pointer-events: none;
+    
+    > * {
+      pointer-events: auto;
+    }
+  }
+}
+
+.widget-caption {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: center;
+  padding: 0 1rem 0.75rem 1rem;
+  margin-top: -0.5rem; /* pull up closer to the image */
+}
+
+@keyframes beacon {
+  0% { opacity: 0.35; }
+  50% { opacity: 1; }
+  100% { opacity: 0.35; }
+}

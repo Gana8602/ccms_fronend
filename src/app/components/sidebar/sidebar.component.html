@@ -1,0 +1,62 @@
+<div class="flex flex-col h-full w-full bg-brand-panel text-brand-text">
+  <!-- Logo Section -->
+  <div class="flex items-center justify-center py-4 border-b border-divider shrink-0">
+    <div class="flex flex-col items-center">
+      <img [src]="logoPath" alt="Logo" class="h-14 w-auto" onerror="this.src='https://via.placeholder.com/150x80?text=LOGO'">
+      <div class="text-[9px] font-bold text-[#b78a3b] mt-1 tracking-widest uppercase">Saranam Ayyappa</div>
+    </div>
+  </div>
+
+  <!-- Main Navigation -->
+  <div class="flex-grow overflow-y-auto custom-scrollbar py-2">
+    @for (item of navItems(); track item.label; let i = $index) {
+      <button 
+        class="w-full flex items-center px-4 py-2 text-[11px] font-semibold transition-all group"
+        [class]="item.active ? 'bg-primary-blue text-white' : 'text-brand-text hover:bg-slate-100 dark:hover:bg-slate-800'"
+        (click)="selectNav(i)">
+        
+        <i [class]="item.icon + ' w-6 text-center'" [class.text-white]="item.active" [class.text-primary-blue]="!item.active" class="group-hover:text-primary-blue transition-colors"></i>
+        <span class="ml-2">{{ item.label }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Emergency Section -->
+  <div class="p-3 border-t border-divider shrink-0">
+    <div class="border border-status-red rounded p-2 text-center relative overflow-hidden bg-red-50 dark:bg-[#1a0000]">
+      <div class="text-status-red font-bold text-[10px] mb-0.5">EMERGENCY</div>
+      <div class="text-status-red text-xl font-display font-black flex justify-center items-center gap-2">
+        <i class="pi pi-phone"></i> 112
+      </div>
+      <div class="text-[8px] text-status-red mt-0.5 font-bold">SOS QUICK CALL</div>
+    </div>
+    
+    <div class="mt-2 flex flex-col gap-1.5 px-1 border-b border-divider pb-2">
+      <div class="flex items-center text-[10px] font-semibold text-brand-text cursor-pointer"><i class="pi pi-plus-circle text-status-red mr-2"></i> Police Control Room</div>
+      <div class="flex items-center text-[10px] font-semibold text-brand-text cursor-pointer"><i class="pi pi-plus-circle text-status-red mr-2"></i> Medical Control Room</div>
+      <div class="flex items-center text-[10px] font-semibold text-brand-text cursor-pointer"><i class="pi pi-plus-circle text-status-red mr-2"></i> Fire & Rescue</div>
+      <div class="flex items-center text-[10px] font-semibold text-brand-text cursor-pointer"><i class="pi pi-plus-circle text-status-red mr-2"></i> Volunteer Support</div>
+    </div>
+
+    <div class="mt-2 flex flex-col gap-1">
+      <div class="text-[9px] font-bold text-primary-dark uppercase">Nearest Hospital</div>
+      <div class="text-[10px] font-semibold text-brand-text">Pamba Government Hospital</div>
+      <div class="text-[9px] text-muted">4.2 KM</div>
+      
+      <div class="text-[9px] font-bold text-primary-dark uppercase mt-1">Ambulances Available</div>
+      <div class="text-xs font-bold text-brand-text">8</div>
+    </div>
+  </div>
+
+  <!-- Quick Access -->
+  <div class="px-2 py-2 border-t border-divider shrink-0 bg-slate-50 dark:bg-black flex items-center justify-between">
+    <div class="text-[9px] font-bold text-primary-blue uppercase tracking-widest px-2">Quick Access</div>
+    <div class="flex gap-1">
+      @for (item of quickAccess(); track item.label) {
+        <button class="flex items-center justify-center p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-all group" [title]="item.label">
+          <i [class]="item.icon + ' text-primary-blue text-[10px]'"></i>
+        </button>
+      }
+    </div>
+  </div>
+</div>
