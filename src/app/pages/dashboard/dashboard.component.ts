@@ -84,7 +84,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       if (res && res.cameras) {
         const loadedCams = res.cameras.map((c: any) => ({
           ...c,
-          feedUrl: `http://localhost:8000/video_feed/${c.id}/`,
+          feedUrl: `/video_feed/${c.id}/`,
           isWorking: true
         }));
         this.cameras.set(loadedCams);

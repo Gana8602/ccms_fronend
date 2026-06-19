@@ -85,7 +85,7 @@ export class LiveMonitoringComponent implements OnInit, AfterViewInit, OnDestroy
           id: c.id,
           name: c.name,
           status: 'online',
-          feedUrl: `http://localhost:8000/video_feed/${c.id}/`,
+          feedUrl: `/video_feed/${c.id}/`,
           isWorking: true,
           count: 0
         }));

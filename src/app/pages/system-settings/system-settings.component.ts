@@ -44,7 +44,7 @@ export class SystemSettingsComponent implements OnInit, AfterViewInit {
           id: c.id,
           name: c.name,
           status: 'online',
-          feedUrl: `http://localhost:8000/video_feed/${c.id}/`,
+          feedUrl: `/video_feed/${c.id}/`,
           gcpPoints: c.gcp_points
         }));
         this.cameras.set(loadedCams);
